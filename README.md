@@ -1,1 +1,1 @@
-# new-repo-template
+# snapcenter-50
