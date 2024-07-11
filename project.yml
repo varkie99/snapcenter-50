@@ -1,6 +1,7 @@
 ---
 settings:
   name: SnapCenter Software 5.0
+  downlevel: true
   internal:
     pdf_enabled: true
   prod:
