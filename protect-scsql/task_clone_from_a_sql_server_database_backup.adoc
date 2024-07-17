@@ -1,0 +1,136 @@
+---
+permalink: protect-scsql/task_clone_from_a_sql_server_database_backup.html
+sidebar: sidebar
+keywords: clone
+summary: 'You can use SnapCenter to clone a SQL Server database backup. If you want to access or restore an older version of the data, you can clone database backups on demand.'
+---
+= Clone from a SQL Server database backup
+:icons: font
+:imagesdir: ../media/
+
+[.lead]
+You can use SnapCenter to clone a SQL Server database backup. If you want to access or restore an older version of the data, you can clone database backups on demand.
+
+.Before you begin
+
+* You should have prepared for data protection by completing tasks such as adding hosts, identifying resources, and creating storage system connections.
+* You should have backed up databases or resource groups.
+* The protection type such as mirror, vault, or mirror-vault for data LUN and log LUN should be same to discover secondary locators during cloning to an alternate host using log backups.
+* If the mounted clone drive cannot be found during a SnapCenter clone operation, you should change the CloneRetryTimeout parameter of SnapCenter Server to 300.
+* You should ensure that the aggregates hosting the volumes should be in the assigned aggregates list of the storage virtual machine (SVM).
+
+.About this task
+
+* While cloning to a standalone database instance, ensure that the mount point path exists and it is a dedicated disk.
+* While cloning to a Failover Cluster Instance (FCI), ensure that the mount points exists, it is a shared disk, and the path and the FCI should belong to the same SQL resource group.
+* Ensure that there is only one vFC or FC initiator attached to each host. This is because, SnapCenter supports only one initiator per host.
+* If the source database or the target instance is on a cluster shared volume (csv), then the cloned database will be on the csv.
+* The SCRIPTS_PATH is defined using the PredefinedWindowsScriptsDirectory key located in the SMCoreServiceHost.exe.Config file of the plug-in host.
++
+If needed, you can change this path and restart SMcore service.  It is recommended that you use the default path for security.
++
+The value of the key can be displayed from swagger through the API: API /4.7/configsettings
++
+You can use the GET API to display the value of the key. SET API is not supported.
+
+NOTE: For virtual environments (VMDK/RDM), ensure that the mount point is a dedicated disk.
+
+* For ONTAP 9.12.1 and below version, the clones created from the SnapLock Vault Snapshots as part of restore will inherit the SnapLock Vault expiry time. Storage admin should manually cleanup the clones post the SnapLock expiry time.
+
+.Steps
+
+. In the left navigation pane, select *Resources*, and then select *SnapCenter Plug-in for SQL Server* from the list.
+. In the Resources page, select either *Database* or *Resource Group* from the *View* list.
++
+NOTE: Cloning of a backup of an instance is not supported.
+. Select the database or resource group.
+. From the *Manage Copies* view page, select the backup either from primary or secondary (mirrored or vaulted) storage system.
+. Select the backup, and then select *image:../media/clone_icon.gif[clone icon]*.
+. In the *Clone Options* page, perform the following actions:
++
+|===
+| For this field...| Do this...
+
+a|
+Clone server
+a|
+Choose a host on which the clone should be created.
+a|
+Clone instance
+a|
+Choose a clone instance to which you want to clone the database backup.
+
+This SQL instance must be located in the specified clone server.
+a|
+Clone suffix
+a|
+Enter a suffix that will be appended to the clone file name to identify that the database is a clone.
+
+For example, _db1_clone_. If you are cloning to the same location as the original database, you must provide a suffix to differentiate the cloned database from the original database. Otherwise, the operation fails.
+a|
+Auto assign mount point or Auto assign volume mount point under path
+a|
+Choose whether to automatically assign a mount point or a volume mount point under a path.
+
+Auto assign volume mount point under path: The mount point under a path allows you to provide a specific directory. The mount points will be created within that directory. Before you choose this option, you must ensure that the directory is empty. If there is a database in the directory, the database will be in an invalid state after the mount operation.
+
+|===
+
+. In the Logs page, select one of the following options:
++
+|===
+| For this field...| Do this...
+
+a|
+None
+a|
+Choose this option when you want to clone only the full backup without any logs.
+a|
+All log backups
+a|
+Choose this option to clone all the available log backups dated after the full backup.
+a|
+By log backups until
+a|
+Choose this option to clone the database based on the backup logs that were created up to the backup log with the selected date.
+a|
+By specific date until
+a|
+Specify the date and time after which the transaction logs are not applied to the cloned database.
+
+This point-in-time clone halts the clone of the transaction log entries that were recorded after the specified date and time.
+
+|===
+
+. In the *Script* page, enter the script timeout, path, and the arguments of the prescript or postscript that should be run before or after the clone operation, respectively.
++
+For example, you can run a script to update SNMP traps, automate alerts, send logs, and so on.
++
+NOTE: The prescripts or postscripts path should not include drives or shares. The path should be relative to the SCRIPTS_PATH.
++
+The default script timeout is 60 seconds.
+
+. In the *Notification* page, from the *Email preference* drop-down list, select the scenarios in which you want to send the emails.
++
+You must also specify the sender and receiver email addresses, and the subject of the email. If you want to attach the report of the clone operation performed, select *Attach Job Report*.
++
+NOTE: For email notification, you must have specified the SMTP server details using the either the GUI or the PowerShell command Set-SmSmtpServer.
++
+For EMS, you can refer to https://docs.netapp.com/us-en/snapcenter/admin/concept_manage_ems_data_collection.html[Manage EMS data collection]
+
+. Review the summary, and then select *Finish*.
+. Monitor the operation progress by selecting *Monitor* > *Jobs*.
+
+.After you finish
+
+After the clone is created, you should never rename it.
+
+.Related information
+
+link:reference_back_up_sql_server_database_or_instance_or_availability_group.html[Back up SQL Server database, or instance, or availability group]
+
+link:task_clone_backups_using_powershell_cmdlets_for_sql.html[Clone backups using PowerShell cmdlets]
+
+https://kb.netapp.com/Advice_and_Troubleshooting/Data_Protection_and_Security/SnapCenter/Clone_operation_might_fail_or_take_longer_time_to_complete_with_default_TCP_TIMEOUT_value[Clone operation might fail or take longer time to complete with default TCP_TIMEOUT value]
+
+https://kb.netapp.com/Advice_and_Troubleshooting/Data_Protection_and_Security/SnapCenter/The_failover_cluster_instance_database_clone_fails[The failover cluster instance database clone fails]
