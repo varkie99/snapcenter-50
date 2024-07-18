@@ -1,0 +1,156 @@
+---
+permalink: protect-scw/task_create_backup_policies_for_windows_file_systems.html
+sidebar: sidebar
+keywords: backup policy
+summary: 'You can create a new backup policy for resources before you use SnapCenter to back up Windows file systems, or you can create a new backup policy at the time you create a resource group or when you back up a resource.'
+---
+= Create backup policies for Windows file systems
+:icons: font
+:imagesdir: ../media/
+
+[.lead]
+You can create a new backup policy for resources before you use SnapCenter to back up Windows file systems, or you can create a new backup policy at the time you create a resource group or when you back up a resource.
+
+.Before you begin
+
+* You must have defined your backup strategy. link:task_define_a_backup_strategy_for_windows_file_systems.html[Learn more^]
+
+* You must have prepared for data protection.
++
+To prepare for data protection, you must complete tasks such as installing SnapCenter, adding hosts, discovering resources, and creating storage virtual machine (SVM) connections.
+
+* If you are replicating Snapshots to a mirror or vault secondary storage, the SnapCenter administrator must have assigned the SVMs to you for both the source and destination volumes.
+
+* If you want to run the PowerShell scripts in prescripts and postscripts, you should set the value of the usePowershellProcessforScripts parameter to true in the web.config file.
++
+The default value is false
+
+* For SnapMirror Business Continuity (SM-BC), for more information on prerequisites and limitations refer https://docs.netapp.com/us-en/ontap/smbc/considerations-limits.html#volumes[Object limits for SnapMirror Business Continuity].
+
+.About this task
+
+* The SCRIPTS_PATH is defined using the PredefinedWindowsScriptsDirectory key located in the SMCoreServiceHost.exe.Config file of the plug-in host.
++
+If needed, you can change this path and restart SMcore service.  It is recommended that you use the default path for security.
++
+The value of the key can be displayed from swagger through the API: API /4.7/configsettings
++
+You can use the GET API to display the value of the key. SET API is not supported.
+
+* SnapLock 
+
+** If 'Retain the backup copies for a specific number of days' option is selected, then the SnapLock retention period must be lesser than or equal to the mentioned retention days.
+
+** Specifying a Snapshot locking period prevents deletion of the Snapshots until the retention period expires. This could lead to retaining a larger number of Snapshots than the count specified in the policy.
+** For ONTAP 9.12.1 and below version, the clones created from the SnapLock Vault Snapshots as part of restore will inherit the SnapLock Vault expiry time. Storage admin should manually cleanup the clones post the SnapLock expiry time.
+
+NOTE: Primary SnapLock settings are managed in SnapCenter backup policy and the secondary SnapLock settings are managed by ONTAP.
+
+.Steps
+
+. In the left navigation pane, click *Settings*.
+. In the Settings page, click *Policies*.
+. To determine if you can use an existing policy, select the policy name and then click *Details*.
++
+After reviewing the existing policies, you can perform one of the following:
+
+ ** Use an existing policy.
+ ** Copy an existing policy and modify the policy configuration.
+ ** Create a new policy.
+
+. To create a new policy, click *New*.
+. In the Name page, enter the policy name and a description.
+. In the Backup Options page, perform the following tasks:
+ .. Select a backup setting.
++
+|===
+| Option | Description
+
+a|
+File System Consistent Backup
+a|
+Choose this option if you want SnapCenter to quiesce the disk drive on which the file system resides before the backup operation begins and then resume the disk drive after the backup operation ends.
+a|
+File System Crash-consistent Backup
+a|
+Choose this option if you do not want SnapCenter to quiesce the disk drive on which the file system resides.
+|===
+
+ .. Select a schedule frequency (also called a policy type).
++
+The policy specifies the backup frequency only. The specific protection schedule for backing up is defined in the resource group. Therefore, two or more resource groups can share the same policy and backup frequency but have different backup schedules.
++
+NOTE: If you have scheduled for 2:00 a.m., the schedule will not be triggered during daylight saving time (DST).
+. On the Retention page, specify the retention settings for on-demand backups and for each schedule frequency you selected.
++
+
+|===
+| Option | Description
+
+a|
+Total Snapshot copies to retain
+a|
+Choose this option if you want to specify the number of Snapshots SnapCenter stores before automatically deleting them.
+a|
+Delete Snapshot copies older than
+a|
+Choose this option if you want to specify the number of days SnapCenter retains a backup copy before deleting it.
+a|
+Snapshot copy locking period
+a|
+Select Snapshot locking period, and select days, months, or years.
+
+SnapLock retention period should be less than 100 years.
+|===
+IMPORTANT: You should set the retention count to 2 or higher. The minimum value for the retention count is 2.
++
+NOTE: The maximum retention value is 1018 for resources on ONTAP 9.4 or later, and 254 for resources on ONTAP 9.3 or earlier. Backups will fail if retention is set to a value higher than what the underlying ONTAP version supports.
+
+. In the Replication page, specify replication to the secondary storage system:
++
+|===
+| For this field... | Do this...
+
+a|
+*Update SnapMirror after creating a local Snapshot copy*
+a|
+Select this option to create mirror copies of backup sets on another volume (SnapMirror).
+
+This option should be enabled for SnapMirror Business Continuity (SM-BC).
+
+During secondary replication, the SnapLock expiry time loads the primary SnapLock expiry time. Clicking the *Refresh* button in the Topology page refreshes the secondary and primary SnapLock expiry time that are retrieved from ONTAP.
+
+See link:../protect-scw/task_view_related_backups_and_clones_in_the_topology_page.html[View related backups and clones in the Topology page].
+a|
+Update SnapVault after creating a Snapshot copy
+a|
+Select this option to perform disk-to-disk backup replication.
+
+During secondary replication, the SnapLock expiry time loads the primary SnapLock expiry time. Clicking the Refresh button in the Topology page refreshes the secondary and primary SnapLock expiry time that are retrieved from ONTAP.
+
+When SnapLock is configured only on the secondary from ONTAP known as SnapLock Vault, clicking the Refresh button in the Topology page refreshes the locking period on the secondary that is retrieved from ONTAP.
+
+For more information on SnapLock Vault see https://docs.netapp.com/us-en/ontap/snaplock/commit-snapshot-copies-worm-concept.html[Commit Snapshot copies to WORM on a vault destination]
+a|
+Secondary policy label
+a|
+Select a Snapshot label.
+
+Depending on the Snapshot label that you select, ONTAP applies the secondary Snapshot retention policy that matches the label.
+
+NOTE: If you have selected *Update SnapMirror after creating a local Snapshot copy*, you can optionally specify the secondary policy label. However, if you have selected *Update SnapVault after creating a local Snapshot copy*, you should specify the secondary policy label.
+
+a|
+Error retry count
+a|
+Enter the number of replication attempts that should occur before the process halts.
+|===
+NOTE: You should configure SnapMirror retention policy in ONTAP for the secondary storage to avoid reaching the maximum limit of Snapshots on the secondary storage.
+
+. In the Script page, enter the path of the prescript or postscript that you want the SnapCenter Server to run before or after the backup operation, respectively and a time limit that SnapCenter waits for the script to execute before timing out.
++
+For example, you can run a script to update SNMP traps, automate alerts, and send logs.
++
+NOTE: The prescripts or postscripts path should not include drives or shares. The path should be relative to the SCRIPTS_PATH.
+
+. Review the summary, and then click *Finish*.
