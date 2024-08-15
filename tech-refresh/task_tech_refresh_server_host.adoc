@@ -65,13 +65,13 @@ You can perform disaster recovery by restoring the server backup to the new host
 
 .Before you begin
 
-Ensure that you have a backup of the old SnapCenter Server.
+Ensure that you have a backup of the old SnapCenter Server by using either the API: `/5.0/server/backup)` or the cmdlet: _New-SmServerBackup_.
 
 .Steps
 
 . Deploy the new host and perform the following tasks:
 .. Install the same version of the SnapCenter Server.
-.. Configure CA certificates and enable two-way SSL. For more information, refer to https://docs.netapp.com/us-en/snapcenter/install/reference_generate_CA_certificate_CSR_file.html[Configure CA Certificate] and https://docs.netapp.com/us-en/snapcenter/install/task_configure_two_way_ssl.html[Configure and enable two-way SSL].
+.. (Optional) Configure CA certificates and enable two-way SSL. For more information, refer to https://docs.netapp.com/us-en/snapcenter/install/reference_generate_CA_certificate_CSR_file.html[Configure CA Certificate] and https://docs.netapp.com/us-en/snapcenter/install/task_configure_two_way_ssl.html[Configure and enable two-way SSL].
 . Copy the old SnapCenter Server backup to the new host.
 . Log in as the SnapCenter Admin user.
 . Restore the backup of the SnapCenter Server on the new host using either the API: `/5.0/server/restore` or the cmdlet: _Restore-SmServerBackup_.
